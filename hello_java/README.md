@@ -2,11 +2,14 @@
 
 Java API example using Spring Boot.
 
+Default port: `127.0.0.1:3006`
+
 ## Project Structure
 
 - Dependency: `pom.xml`
 - Source: `src/main/java/com/example/hello_java/`
 - Execute: `target/hello_java-0.1.0.jar`
+- Event log: `events/request-events.jsonl`
 - Run: `mvn spring-boot:run`
 
 ## What Each File Does
@@ -36,13 +39,30 @@ This is the main API source file.
 
 It contains:
 - route handlers
-- request metadata helper
+- calls to the event publishing service
 - time and health responses
 
 Current routes:
 - `/` returns welcome information
 - `/time` returns time data in UTC and Thailand time
 - `/health` returns service health status
+
+### `src/main/java/com/example/hello_java/EventService.java`
+
+This service handles the internal event-driven flow.
+
+It contains:
+- an in-memory queue for app events
+- logic for publishing events from the controller
+- a background consumer thread
+- JSONL event log writing
+
+### `src/main/java/com/example/hello_java/*.java`
+
+The additional record files define:
+- request metadata
+- event payload data
+- full app event structure
 
 ### `src/main/resources/application.properties`
 
@@ -59,6 +79,24 @@ The runnable package is typically:
 
 - `target/hello_java-0.1.0.jar`
 
+## Event-Driven Shape
+
+This project now uses a simple event-driven pattern inside the service.
+
+The HTTP handler still responds to the client immediately, but it also publishes an internal event.
+
+That event is then consumed by a background worker.
+
+Flow:
+
+1. client sends request
+2. route handler creates response data
+3. route handler publishes an event into an internal queue
+4. background consumer receives the event
+5. event is written to `events/request-events.jsonl`
+
+This is not a full broker-based event-driven architecture yet, but it is a clear first step toward one.
+
 ## How `mvn spring-boot:run` Works
 
 When you run:
@@ -72,9 +110,10 @@ Java works in this order:
 1. Read `pom.xml`
 2. Resolve dependencies
 3. Load source code from `src/main/java/...`
-4. Compile the project
-5. Start the Spring Boot application
-6. Listen for requests on `127.0.0.1:3006`
+4. Start the internal event consumer service
+5. Compile the project
+6. Start the Spring Boot application
+7. Listen for requests on `127.0.0.1:3006`
 
 ## Request Flow in This Project
 
@@ -94,8 +133,10 @@ the flow is:
    - Thailand time
    - `trace_id`
    - request metadata
-5. Java converts the response into JSON
-6. The API returns the JSON response to the client
+5. The handler publishes a `time_requested` event into the internal queue
+6. Java converts the response into JSON
+7. The API returns the JSON response to the client
+8. the background consumer writes the event into `events/request-events.jsonl`
 
 ## Run the Project
 
@@ -111,10 +152,19 @@ Then open:
 - `http://127.0.0.1:3006/time`
 - `http://127.0.0.1:3006/health`
 
+After calling the API, you can inspect:
+
+```text
+events/request-events.jsonl
+```
+
+to see the emitted events.
+
 ## Summary
 
 - `pom.xml` tells Java how the project is configured
 - `src/main/java/...` contains the application logic
+- `events/request-events.jsonl` stores consumed events
 - `target/` contains the build output
 - `mvn spring-boot:run` builds and runs the project
 - this project uses port `3006`

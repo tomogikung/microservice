@@ -2,11 +2,14 @@
 
 Go API example using the standard `net/http` package.
 
+Default port: `127.0.0.1:3001`
+
 ## Project Structure
 
 - Dependency: `go.mod`
 - Source: `main.go`
 - Execute: compiled binary such as `hello_go`
+- Event log: `events/request-events.jsonl`
 - Run: `go run .`
 
 ## What Each File Does
@@ -24,6 +27,7 @@ In this project, `go.mod` is simple because the API uses Go standard library pac
 - `encoding/json`
 - `time`
 - `log`
+- `os`
 
 ### `main.go`
 
@@ -31,14 +35,21 @@ This is the main source file of the project.
 
 It contains:
 - API response structs
+- application event structs and shared app state
 - request metadata struct
 - handler functions for each route
+- background event consumer
 - the `main()` function that starts the server
 
 Current routes:
 - `/` returns welcome information
 - `/time` returns time data in UTC and Thailand time
 - `/health` returns service health status
+
+Current event behavior:
+- every request publishes an event into an internal Go channel
+- a background goroutine consumes events
+- consumed events are appended to `events/request-events.jsonl`
 
 ### Executable File
 
@@ -55,6 +66,24 @@ go build
 ```
 
 That binary is the executable file for the project.
+
+## Event-Driven Shape
+
+This project now uses a simple event-driven pattern inside the service.
+
+The HTTP handler still responds to the client immediately, but it also publishes an internal event.
+
+That event is then consumed by a background worker.
+
+Flow:
+
+1. client sends request
+2. route handler creates response data
+3. route handler publishes an event into a Go channel
+4. background consumer receives the event
+5. event is written to `events/request-events.jsonl`
+
+This is not a full broker-based event-driven architecture yet, but it is a clear first step toward one.
 
 ## How `go run .` Works
 
@@ -98,8 +127,10 @@ the flow is:
    - Thailand time
    - `trace_id`
    - request metadata
-5. Go serializes the response struct into JSON
-6. The API returns the JSON response to the client
+5. `timeHandler()` publishes a `time_requested` event into the internal channel
+6. Go serializes the response struct into JSON
+7. The API returns the JSON response to the client
+8. the background consumer writes the event into `events/request-events.jsonl`
 
 ## Run the Project
 
@@ -115,9 +146,18 @@ Then open:
 - `http://127.0.0.1:3001/time`
 - `http://127.0.0.1:3001/health`
 
+After calling the API, you can inspect:
+
+```text
+events/request-events.jsonl
+```
+
+to see the emitted events.
+
 ## Summary
 
 - `go.mod` tells Go about the module
 - `main.go` contains the application logic
+- `events/request-events.jsonl` stores consumed events
 - `go run .` compiles and runs the project
 - `go build` creates the executable file

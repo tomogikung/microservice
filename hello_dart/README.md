@@ -2,11 +2,14 @@
 
 Dart API example using `dart:io`.
 
+Default port: `127.0.0.1:3007`
+
 ## Project Structure
 
 - Dependency: `pubspec.yaml`
 - Source: `bin/main.dart`
 - Execute: Dart process started by `dart run`
+- Event log: `events/request-events.jsonl`
 - Run: `dart run bin/main.dart`
 
 ## What Each File Does
@@ -30,12 +33,19 @@ It contains:
 - HTTP server setup
 - JSON response helper
 - request metadata helper
+- internal event publishing
+- background event consumer
 - time and health responses
 
 Current routes:
 - `/` returns welcome information
 - `/time` returns time data in UTC and Thailand time
 - `/health` returns service health status
+
+Current event behavior:
+- every request publishes an event into an internal Dart stream
+- a background consumer reads queued events
+- consumed events are appended to `events/request-events.jsonl`
 
 ### Execute
 
@@ -46,6 +56,24 @@ The app runs as a Dart process through:
 ```bash
 dart run bin/main.dart
 ```
+
+## Event-Driven Shape
+
+This project now uses a simple event-driven pattern inside the service.
+
+The HTTP handler still responds to the client immediately, but it also publishes an internal event.
+
+That event is then consumed by a background worker.
+
+Flow:
+
+1. client sends request
+2. route handler creates response data
+3. route handler publishes an event into an internal stream
+4. background consumer receives the event
+5. event is written to `events/request-events.jsonl`
+
+This is not a full broker-based event-driven architecture yet, but it is a clear first step toward one.
 
 ## How `dart run bin/main.dart` Works
 
@@ -59,8 +87,9 @@ Dart works in this order:
 
 1. Read `pubspec.yaml`
 2. Load source code from `bin/main.dart`
-3. Start the HTTP server
-4. Listen for requests on `127.0.0.1:3007`
+3. Start the background event consumer
+4. Start the HTTP server
+5. Listen for requests on `127.0.0.1:3007`
 
 ## Request Flow in This Project
 
@@ -80,8 +109,10 @@ the flow is:
    - Thailand time
    - `trace_id`
    - request metadata
-5. Dart converts the response into JSON
-6. The API returns the JSON response to the client
+5. The handler publishes a `time_requested` event into the internal stream
+6. Dart converts the response into JSON
+7. The API returns the JSON response to the client
+8. the background consumer writes the event into `events/request-events.jsonl`
 
 ## Run the Project
 
@@ -97,9 +128,18 @@ Then open:
 - `http://127.0.0.1:3007/time`
 - `http://127.0.0.1:3007/health`
 
+After calling the API, you can inspect:
+
+```text
+events/request-events.jsonl
+```
+
+to see the emitted events.
+
 ## Summary
 
 - `pubspec.yaml` tells Dart about the project
 - `bin/main.dart` contains the application logic
+- `events/request-events.jsonl` stores consumed events
 - `dart run` runs the API server
 - this project uses port `3007`
