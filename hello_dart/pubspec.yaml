@@ -1,0 +1,5 @@
+name: hello_dart
+description: Dart API example project
+version: 0.1.0
+environment:
+  sdk: ^3.0.0

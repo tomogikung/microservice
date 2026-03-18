@@ -1,0 +1,11 @@
+{
+  "name": "hello/php",
+  "description": "PHP API example project",
+  "type": "project",
+  "require": {},
+  "autoload": {
+    "psr-4": {
+      "HelloPhp\\": "src/"
+    }
+  }
+}
