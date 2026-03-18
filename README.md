@@ -30,15 +30,15 @@ These are the runtimes and tools detected in this machine at the moment:
 
 | Tool | Status |
 | --- | --- |
-| `cargo` | found at `/Users/arthornkhumtoie/opt/anaconda3/bin/cargo` |
-| `go` | found at `/Users/arthornkhumtoie/opt/go/bin/go` |
-| `python3` | found at `/Library/Frameworks/Python.framework/Versions/3.13/bin/python3` |
+| `cargo` | available |
+| `go` | available |
+| `python3` | available |
 | `node` | not found |
 | `php` | not found |
 | `dotnet` | not found |
-| `java` | found at `/usr/bin/java` |
+| `java` | available |
 | `dart` | not found |
-| `bash` | found at `/bin/bash` |
+| `bash` | available |
 | `mvn` | not found |
 
 ## Notes
