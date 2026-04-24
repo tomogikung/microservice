@@ -272,3 +272,94 @@ cat /app/events/request-events.jsonl
 - port ใน `docker run -p host:container` ควรตรงกับ `ENV PORT` และ `EXPOSE` ของ service
 - service ที่เขียน event log ต้องมี permission เขียนไฟล์ใน `/app/events`
 - ถ้าใช้ multi-stage build ชื่อไฟล์ output ต้องตรงกับไฟล์ที่ `COPY --from=builder` อ้างถึง
+
+## Diagram Cards Usage Guide
+
+โฟลเดอร์ `diagram_cards` ใช้เก็บภาพสรุป Docker ของแต่ละ microservice ในรูปแบบ SVG โดย card แต่ละใบถูกสร้างจากข้อมูลในไฟล์ `hello_*/ex_file`
+
+ไฟล์หลักในโฟลเดอร์นี้:
+
+| ไฟล์ | ใช้สำหรับ |
+| --- | --- |
+| `diagram_cards/index.html` | หน้า gallery สำหรับเปิดดู card ทั้งหมดใน browser |
+| `diagram_cards/hello_rust.svg` | card ของ Rust service |
+| `diagram_cards/hello_go.svg` | card ของ Go service |
+| `diagram_cards/hello_python.svg` | card ของ Python service |
+| `diagram_cards/hello_javascript.svg` | card ของ JavaScript service |
+| `diagram_cards/hello_php.svg` | card ของ PHP service |
+| `diagram_cards/hello_csharp.svg` | card ของ C# service |
+| `diagram_cards/hello_java.svg` | card ของ Java service |
+| `diagram_cards/hello_dart.svg` | card ของ Dart service |
+| `diagram_cards/hello_bash.svg` | card ของ Bash service |
+
+### วิธีเปิดดู Diagram Cards
+
+เปิดไฟล์ gallery ได้โดยตรงจาก browser:
+
+```bash
+open diagram_cards/index.html
+```
+
+ถ้าไม่ได้ใช้ macOS ให้เปิดไฟล์นี้ด้วย browser เอง:
+
+```text
+diagram_cards/index.html
+```
+
+ในหน้า gallery สามารถคลิก card แต่ละภาษาเพื่อเปิดไฟล์ SVG แบบเต็มได้
+
+### วิธีเปิดดู Card รายตัว
+
+สามารถเปิด SVG รายตัวได้โดยตรง เช่น:
+
+```bash
+open diagram_cards/hello_python.svg
+```
+
+หรืออ้างอิงไฟล์ SVG เหล่านี้ในเอกสาร Markdown/HTML อื่นได้ เช่น:
+
+```markdown
+![Python diagram card](diagram_cards/hello_python.svg)
+```
+
+### วิธี Generate Diagram Cards ใหม่
+
+ถ้ามีการแก้ไขไฟล์ `hello_*/ex_file` แล้วต้องการสร้าง card ใหม่ ให้รัน script จาก root ของโปรเจกต์ `microservice`:
+
+```bash
+python3 scripts/generate_diagram_cards.py
+```
+
+script จะอ่านไฟล์ตาม pattern นี้:
+
+```text
+hello_*/ex_file
+```
+
+จากนั้นจะเขียนผลลัพธ์ใหม่ลงใน:
+
+```text
+diagram_cards/
+```
+
+ไฟล์ที่ถูกสร้างหรืออัปเดตคือ:
+
+- `diagram_cards/index.html`
+- `diagram_cards/hello_*.svg`
+
+### ข้อมูลที่แสดงใน Card
+
+แต่ละ card สรุปข้อมูลหลักจาก `ex_file` ได้แก่:
+
+- `Real World`: ตัวอย่าง Dockerfile
+- `Command`: คำสั่ง build image
+- `Context`: ไฟล์ที่ต้องอยู่ใน build context
+- `Build Stage`: stage ที่ใช้ build หรือเตรียม dependency
+- `Runtime Stage`: image และไฟล์ที่ใช้ตอนรันจริง
+- `Port`: port ที่อ่านจาก `EXPOSE` หรือ `PORT`
+
+### ข้อควรระวัง
+
+- ถ้าเพิ่ม service ใหม่ ต้องสร้าง `hello_newservice/ex_file` ก่อน แล้วค่อยรัน `python3 scripts/generate_diagram_cards.py`
+- ถ้าแก้โครงสร้างหัวข้อใน `ex_file` มากเกินไป script อาจดึงข้อมูลไปแสดงไม่ครบ
+- ไฟล์ SVG ใน `diagram_cards` เป็น generated output ควร regenerate ทุกครั้งหลังแก้ `ex_file`
