@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Microservice Diagram Cards</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #151819;
+      --panel: #1f2428;
+      --border: #3d464d;
+      --text: #f8fafc;
+      --muted: #cbd5df;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: Inter, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 32px;
+    }
+    p {
+      margin: 0 0 24px;
+      color: var(--muted);
+      font-size: 16px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      display: block;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--panel);
+      text-decoration: none;
+      color: inherit;
+    }
+    .card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+      border: 1px solid #2d353b;
+      background: #101314;
+    }
+    .card span {
+      display: block;
+      margin-top: 12px;
+      font-size: 15px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+  <h1>Microservice Diagram Cards</h1>
+  <p>SVG cards generated from each language project's ex_file.</p>
+  <div class="grid">
+    <a class="card" href="hello_bash.svg">
+              <img src="hello_bash.svg" alt="Bash diagram card" />
+              <span>Bash</span>
+            </a><a class="card" href="hello_csharp.svg">
+              <img src="hello_csharp.svg" alt="C# diagram card" />
+              <span>C#</span>
+            </a><a class="card" href="hello_dart.svg">
+              <img src="hello_dart.svg" alt="Dart diagram card" />
+              <span>Dart</span>
+            </a><a class="card" href="hello_go.svg">
+              <img src="hello_go.svg" alt="Go diagram card" />
+              <span>Go</span>
+            </a><a class="card" href="hello_java.svg">
+              <img src="hello_java.svg" alt="Java diagram card" />
+              <span>Java</span>
+            </a><a class="card" href="hello_javascript.svg">
+              <img src="hello_javascript.svg" alt="JavaScript diagram card" />
+              <span>JavaScript</span>
+            </a><a class="card" href="hello_php.svg">
+              <img src="hello_php.svg" alt="PHP diagram card" />
+              <span>PHP</span>
+            </a><a class="card" href="hello_python.svg">
+              <img src="hello_python.svg" alt="Python diagram card" />
+              <span>Python</span>
+            </a><a class="card" href="hello_rust.svg">
+              <img src="hello_rust.svg" alt="Rust diagram card" />
+              <span>Rust</span>
+            </a>
+  </div>
+</body>
+</html>

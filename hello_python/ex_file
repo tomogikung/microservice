@@ -1,0 +1,82 @@
+1. Real World
+    FROM python:3.12-slim AS builder
+
+    WORKDIR /app
+    COPY requirements.txt ./
+    RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+    FROM python:3.12-slim
+
+    RUN useradd -r -m -d /app appuser
+
+    WORKDIR /app
+
+    COPY --from=builder /install /usr/local
+    COPY main.py ./
+    COPY requirements.txt ./
+
+    ENV APP_HOST=0.0.0.0
+    ENV PORT=3002
+
+    EXPOSE 3002
+
+    USER appuser
+
+    CMD ["sh", "-c", "uvicorn main:app --host ${APP_HOST} --port ${PORT}"]
+
+2. Command
+    docker build -t hello-python .
+
+3. Context
+    - main.py
+    - requirements.txt
+    - Dockerfile
+
+4. Build stage
+    4.1 python:3.12-slim
+        4.1.1 /app
+            - requirements.txt
+        4.1.2 /install
+            - fastapi
+            - uvicorn
+5. Runtime stage
+    5.1 Docker image
+            5.1.1 hello-python
+                5.1.1.1 python:3.12-slim
+                    5.1.1.1.1 /usr/local
+                        - installed python packages
+                    5.1.1.1.2 /app
+                        - main.py
+                        - requirements.txt
+
+6. Real World line by line
+    6.1 FROM python:3.12-slim AS builder
+        - ใช้ image Python แบบบางเป็น build stage สำหรับติดตั้ง dependencies
+    6.2 WORKDIR /app
+        - กำหนดโฟลเดอร์ทำงานของ build stage เป็น /app
+    6.3 COPY requirements.txt ./
+        - คัดลอกไฟล์รายการ package ที่ต้องติดตั้งเข้า image
+    6.4 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+        - ติดตั้ง package จาก requirements.txt ลงใน /install โดยไม่เก็บ pip cache
+    6.5 FROM python:3.12-slim
+        - เริ่ม runtime stage ใหม่จาก image Python ขนาดเล็ก
+    6.6 RUN useradd -r -m -d /app appuser
+        - สร้าง user appuser สำหรับรันแอปโดยไม่ใช้ root
+    6.7 WORKDIR /app
+        - ตั้งโฟลเดอร์ทำงานของ runtime stage เป็น /app
+    6.8 COPY --from=builder /install /usr/local
+        - คัดลอก package ที่ติดตั้งแล้วจาก build stage เข้ามาใช้ใน runtime image
+    6.9 COPY main.py ./
+        - คัดลอก source หลักของ FastAPI app เข้ามา
+    6.10 COPY requirements.txt ./
+        - คัดลอก requirements.txt มาด้วยเพื่อเก็บบริบทของโปรเจ็กต์ใน image
+    6.11 ENV APP_HOST=0.0.0.0
+        - ตั้งค่า host เริ่มต้นให้ Uvicorn ฟังทุก interface ใน container
+    6.12 ENV PORT=3002
+        - กำหนดพอร์ตเริ่มต้นของ service เป็น 3002
+    6.13 EXPOSE 3002
+        - ระบุว่าภายใน container ใช้งานพอร์ต 3002
+    6.14 USER appuser
+        - สลับไปใช้ appuser ตอนเริ่มรันจริง
+    6.15 CMD ["sh", "-c", "uvicorn main:app --host ${APP_HOST} --port ${PORT}"]
+        - สั่งเริ่ม FastAPI ผ่าน Uvicorn โดยอ่าน host และ port จาก environment

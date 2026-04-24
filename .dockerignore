@@ -1,35 +1,15 @@
-# macOS
+.git
 .DS_Store
-
-# Rust
 hello_rust/target/
 Muti/target/
-
-# Go
-hello_go/hello_go
-hello_go/*.exe
-
-# Python
+hello_*/events/
 hello_python/__pycache__/
 hello_python/.venv/
 hello_python/.pytest_cache/
-
-# JavaScript
 hello_javascript/node_modules/
-
-# PHP
 hello_php/vendor/
-
-# C#
 hello_csharp/bin/
 hello_csharp/obj/
-
-# Java
 hello_java/target/
-
-# Dart
 hello_dart/.dart_tool/
 hello_dart/build/
-
-# Runtime event output
-hello_*/events/

@@ -11,7 +11,8 @@ import (
 
 const (
 	serviceName  = "hello_go"
-	port         = "3001"
+	defaultHost  = "127.0.0.1"
+	defaultPort  = "3001"
 	eventLogPath = "events/request-events.jsonl"
 )
 
@@ -228,14 +229,26 @@ func main() {
 		eventCh: make(chan AppEvent, 128),
 	}
 
+	host := os.Getenv("APP_HOST")
+	if host == "" {
+		host = defaultHost
+	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
+
+	address := host + ":" + port
+
 	go eventConsumer(state.eventCh, eventLogPath)
 
 	http.HandleFunc("/", rootHandler(state))
 	http.HandleFunc("/time", timeHandler(state))
 	http.HandleFunc("/health", healthHandler(state))
 
-	log.Printf("Server running at http://127.0.0.1:%s", port)
-	if err := http.ListenAndServe("127.0.0.1:"+port, nil); err != nil {
+	log.Printf("Server running at http://%s", address)
+	if err := http.ListenAndServe(address, nil); err != nil {
 		log.Fatal(err)
 	}
 }

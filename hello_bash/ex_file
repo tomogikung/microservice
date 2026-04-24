@@ -1,0 +1,75 @@
+1. Real World
+    FROM debian:bookworm-slim
+
+    RUN apt-get update \
+        && apt-get install -y --no-install-recommends bash netcat-openbsd coreutils sed tzdata \
+        && rm -rf /var/lib/apt/lists/* \
+        && useradd -r -m -d /app appuser
+
+    WORKDIR /app
+
+    COPY server.sh ./
+
+    RUN chmod +x /app/server.sh \
+        && mkdir -p /app/events/pending \
+        && chown -R appuser:appuser /app
+
+    ENV APP_HOST=0.0.0.0
+    ENV PORT=3008
+
+    EXPOSE 3008
+
+    USER appuser
+
+    CMD ["bash", "server.sh"]
+
+2. Command
+    docker build -t hello-bash .
+
+3. Context
+    - server.sh
+    - Dockerfile
+
+4. Build stage
+    4.1 none
+        4.1.1 this project runs the shell script directly
+
+5. Runtime stage
+    5.1 Docker image
+            5.1.1 hello-bash
+                5.1.1.1 debian:bookworm-slim
+                    5.1.1.1.1 /app
+                        - server.sh
+                        - events
+
+6. Real World line by line
+    6.1 FROM debian:bookworm-slim
+        - ใช้ Debian slim เป็น runtime image หลักของโปรเจ็กต์ Bash นี้
+    6.2 RUN apt-get update \
+        - อัปเดตรายการ package ก่อนติดตั้งเครื่องมือที่สคริปต์ต้องใช้
+    6.3 && apt-get install -y --no-install-recommends bash netcat-openbsd coreutils sed tzdata \
+        - ติดตั้ง shell และเครื่องมือที่ server.sh ใช้งานจริง
+    6.4 && rm -rf /var/lib/apt/lists/* \
+        - ล้าง apt cache เพื่อลดขนาด image
+    6.5 && useradd -r -m -d /app appuser
+        - สร้าง user appuser สำหรับรัน service แบบ non-root
+    6.6 WORKDIR /app
+        - ตั้งโฟลเดอร์ทำงานภายใน container เป็น /app
+    6.7 COPY server.sh ./
+        - คัดลอกสคริปต์ server หลักเข้ามาใน image
+    6.8 RUN chmod +x /app/server.sh \
+        - ให้สิทธิ์ execute กับไฟล์ server.sh
+    6.9 && mkdir -p /app/events/pending \
+        - สร้างโฟลเดอร์ queue และ event log ที่สคริปต์จะใช้
+    6.10 && chown -R appuser:appuser /app
+        - เปลี่ยน owner ของ /app ให้ appuser เขียนไฟล์ได้
+    6.11 ENV APP_HOST=0.0.0.0
+        - ตั้งค่า host เริ่มต้นให้ netcat ฟังทุก interface ใน container
+    6.12 ENV PORT=3008
+        - กำหนดพอร์ตเริ่มต้นของ service เป็น 3008
+    6.13 EXPOSE 3008
+        - ระบุว่าภายใน container ใช้งานพอร์ต 3008
+    6.14 USER appuser
+        - สลับไปใช้ appuser ตอนรันจริง
+    6.15 CMD ["bash", "server.sh"]
+        - กำหนดคำสั่งเริ่มต้นให้ container รัน server.sh

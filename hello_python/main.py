@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -10,7 +11,7 @@ from fastapi import FastAPI, Request
 
 
 SERVICE_NAME = "hello_python"
-PORT = 3002
+PORT = int(os.getenv("PORT", "3002"))
 EVENT_LOG_PATH = Path("events/request-events.jsonl")
 THAILAND_TZ = timezone(timedelta(hours=7), name="Asia/Bangkok")
 

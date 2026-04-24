@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 const SERVICE_NAME = 'hello_php';
-const PORT = 3004;
+const DEFAULT_PORT = 3004;
 const EVENT_QUEUE_DIR = __DIR__ . '/../events/pending';
 const EVENT_LOG_FILE = 'events/request-events.jsonl';
 const EVENT_QUEUE_PATH = 'events/pending';
@@ -11,6 +11,7 @@ const EVENT_QUEUE_PATH = 'events/pending';
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $traceId = bin2hex(random_bytes(16));
+$port = (int) (getenv('PORT') !== false ? getenv('PORT') : (string) DEFAULT_PORT);
 
 function new_id(): string
 {
@@ -136,7 +137,7 @@ if ($path === '/health') {
             'service' => SERVICE_NAME,
             'healthy' => true,
             'event_consumer' => 'consumer.php outbox processor',
-            'port' => PORT,
+            'port' => $port,
         ],
         'request' => request_info($method, $path, $traceId),
     ]);

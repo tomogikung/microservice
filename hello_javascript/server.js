@@ -4,7 +4,8 @@ import { appendFile, mkdir } from "node:fs/promises";
 
 const app = express();
 const SERVICE_NAME = "hello_javascript";
-const PORT = 3003;
+const HOST = process.env.APP_HOST || "127.0.0.1";
+const PORT = Number(process.env.PORT || "3003");
 const EVENT_LOG_PATH = "events/request-events.jsonl";
 const MAX_QUEUE_SIZE = 128;
 
@@ -175,6 +176,6 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.listen(PORT, "127.0.0.1", () => {
-  console.log(`Server running at http://127.0.0.1:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Server running at http://${HOST}:${PORT}`);
 });

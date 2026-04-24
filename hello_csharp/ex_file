@@ -1,0 +1,91 @@
+1. Real World
+    FROM mcr.microsoft.com/dotnet/sdk:8.0 AS builder
+
+    WORKDIR /src
+    COPY hello_csharp.csproj ./
+    RUN dotnet restore
+    COPY Program.cs ./
+    RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+
+    FROM mcr.microsoft.com/dotnet/aspnet:8.0
+
+    RUN useradd -r -m -d /app appuser
+
+    WORKDIR /app
+
+    COPY --from=builder /app/publish ./
+
+    RUN mkdir -p /app/events \
+        && chown -R appuser:appuser /app
+
+    ENV APP_HOST=0.0.0.0
+    ENV PORT=3005
+
+    EXPOSE 3005
+
+    USER appuser
+
+    CMD ["dotnet", "hello_csharp.dll"]
+
+2. Command
+    docker build -t hello-csharp .
+
+3. Context
+    - Program.cs
+    - hello_csharp.csproj
+    - Dockerfile
+
+4. Build stage
+    4.1 mcr.microsoft.com/dotnet/sdk:8.0
+        4.1.1 /src
+            - Program.cs
+            - hello_csharp.csproj
+        4.1.2 /app/publish
+            - hello_csharp.dll
+            - hello_csharp.deps.json
+            - hello_csharp.runtimeconfig.json
+
+5. Runtime stage
+    5.1 Docker image
+            5.1.1 hello-csharp
+                5.1.1.1 mcr.microsoft.com/dotnet/aspnet:8.0
+                    5.1.1.1.1 /app
+                        - hello_csharp.dll
+                        - runtime files
+                        - events
+
+6. Real World line by line
+    6.1 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS builder
+        - ใช้ image .NET SDK เป็น build stage สำหรับ restore และ publish โปรเจ็กต์
+    6.2 WORKDIR /src
+        - กำหนดโฟลเดอร์ทำงานของ build stage เป็น /src
+    6.3 COPY hello_csharp.csproj ./
+        - คัดลอกไฟล์ project เข้ามาก่อนเพื่อเตรียม restore dependencies
+    6.4 RUN dotnet restore
+        - ดาวน์โหลด package และเตรียม dependency ของโปรเจ็กต์
+    6.5 COPY Program.cs ./
+        - คัดลอก source หลักของแอปเข้ามาใน build stage
+    6.6 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
+        - build และ publish แอปแบบ Release ออกไปยัง /app/publish
+    6.7 FROM mcr.microsoft.com/dotnet/aspnet:8.0
+        - เริ่ม runtime stage จาก image ASP.NET runtime ที่เล็กกว่า SDK
+    6.8 RUN useradd -r -m -d /app appuser
+        - สร้าง user appuser เพื่อใช้รันแอปแบบ non-root
+    6.9 WORKDIR /app
+        - ตั้งโฟลเดอร์ทำงานของ runtime stage เป็น /app
+    6.10 COPY --from=builder /app/publish ./
+        - คัดลอกไฟล์ที่ publish แล้วจาก build stage เข้ามาใน runtime image
+    6.11 RUN mkdir -p /app/events \
+        - สร้างโฟลเดอร์สำหรับเก็บ event log
+    6.12 && chown -R appuser:appuser /app
+        - เปลี่ยน owner ของ /app ให้ appuser เขียนไฟล์ได้
+    6.13 ENV APP_HOST=0.0.0.0
+        - ตั้งค่า host เริ่มต้นให้ service ฟังทุก interface ใน container
+    6.14 ENV PORT=3005
+        - กำหนดพอร์ตเริ่มต้นของ service เป็น 3005
+    6.15 EXPOSE 3005
+        - ระบุว่าภายใน container ใช้งานพอร์ต 3005
+    6.16 USER appuser
+        - สลับไปใช้ appuser ตอนรันจริง
+    6.17 CMD ["dotnet", "hello_csharp.dll"]
+        - กำหนดคำสั่งเริ่มต้นให้ container รันแอปผ่าน dotnet runtime

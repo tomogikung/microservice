@@ -1,0 +1,86 @@
+1. Real World
+    FROM dart:stable AS builder
+
+    WORKDIR /app
+    COPY pubspec.yaml ./
+    COPY bin ./bin
+    RUN dart pub get
+
+    FROM dart:stable
+
+    RUN useradd -r -m -d /app appuser
+
+    WORKDIR /app
+
+    COPY --from=builder /app /app
+
+    RUN mkdir -p /app/events \
+        && chown -R appuser:appuser /app
+
+    ENV APP_HOST=0.0.0.0
+    ENV PORT=3007
+
+    EXPOSE 3007
+
+    USER appuser
+
+    CMD ["dart", "run", "bin/main.dart"]
+
+2. Command
+    docker build -t hello-dart .
+
+3. Context
+    - bin/main.dart
+    - pubspec.yaml
+    - Dockerfile
+
+4. Build stage
+    4.1 dart:stable
+        4.1.1 /app
+            - pubspec.yaml
+            - bin/main.dart
+            - .dart_tool
+
+5. Runtime stage
+    5.1 Docker image
+            5.1.1 hello-dart
+                5.1.1.1 dart:stable
+                    5.1.1.1.1 /app
+                        - bin/main.dart
+                        - pubspec.yaml
+                        - .dart_tool
+                        - events
+
+6. Real World line by line
+    6.1 FROM dart:stable AS builder
+        - ใช้ image Dart เป็น build stage สำหรับเตรียม dependency ของโปรเจ็กต์
+    6.2 WORKDIR /app
+        - กำหนดโฟลเดอร์ทำงานของ build stage เป็น /app
+    6.3 COPY pubspec.yaml ./
+        - คัดลอกไฟล์ package definition ของ Dart เข้ามา
+    6.4 COPY bin ./bin
+        - คัดลอก source หลักในโฟลเดอร์ bin เข้ามาใน build stage
+    6.5 RUN dart pub get
+        - ดาวน์โหลด package ที่ระบุใน pubspec.yaml และสร้าง metadata ที่จำเป็น
+    6.6 FROM dart:stable
+        - เริ่ม runtime stage ใหม่จาก image Dart
+    6.7 RUN useradd -r -m -d /app appuser
+        - สร้าง user appuser สำหรับรัน service แบบ non-root
+    6.8 WORKDIR /app
+        - ตั้งโฟลเดอร์ทำงานของ runtime stage เป็น /app
+    6.9 COPY --from=builder /app /app
+        - คัดลอกไฟล์โปรเจ็กต์ที่พร้อมรันจาก build stage เข้ามาใน runtime image
+    6.10 RUN mkdir -p /app/events \
+        - สร้างโฟลเดอร์สำหรับเก็บ event log
+    6.11 && chown -R appuser:appuser /app
+        - เปลี่ยน owner ของ /app ให้ appuser เขียนไฟล์ได้
+    6.12 ENV APP_HOST=0.0.0.0
+        - ตั้งค่า host เริ่มต้นให้ Dart HTTP server ฟังทุก interface ใน container
+    6.13 ENV PORT=3007
+        - กำหนดพอร์ตเริ่มต้นของ service เป็น 3007
+    6.14 EXPOSE 3007
+        - ระบุว่าภายใน container ใช้งานพอร์ต 3007
+    6.15 USER appuser
+        - สลับไปใช้ appuser ตอนรันจริง
+    6.16 CMD ["dart", "run", "bin/main.dart"]
+        - กำหนดคำสั่งเริ่มต้นให้ container รันแอป Dart

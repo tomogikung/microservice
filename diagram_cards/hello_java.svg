@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1248" viewBox="0 0 1600 1248">
+<rect width="1600" height="1248" fill="#151819" />
+<rect x="24" y="24" width="1552" height="1200" rx="8" fill="#181c1f" stroke="#333c42" stroke-width="1.5" />
+<rect x="48" y="44" width="1504" height="2" fill="#dc2626" opacity="0.9" />
+<text x="48" y="82" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="900" fill="#f8fafc">Java Diagram Card</text>
+<text x="48" y="116" font-family="Inter, Arial, sans-serif" font-size="18" fill="#cbd5df">hello_java  |  generated from ex_file</text>
+<rect x="908" y="68" width="94" height="30" rx="8" fill="#dc2626" opacity="0.95" />
+<text x="922" y="88" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#f8fafc">Port 3006</text>
+<rect x="1028" y="68" width="118" height="30" rx="8" fill="#0f766e" opacity="0.95" />
+<text x="1042" y="88" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#f8fafc">Docker Ready</text>
+<rect x="1188" y="68" width="92" height="30" rx="8" fill="#374151" opacity="0.95" />
+<text x="1202" y="88" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="700" fill="#f8fafc">SVG</text>
+<rect x="48" y="150" width="736" height="676" rx="8" fill="#1f2428" stroke="#3d464d" stroke-width="1.2" />
+<rect x="48" y="150" width="736" height="56" rx="8" fill="#dc2626" />
+<rect x="48" y="198" width="736" height="8" fill="#dc2626" />
+<text x="68" y="184" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" fill="#f8fafc">Real World</text>
+<text x="72" y="236" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  FROM maven:3.9.9-eclipse-temurin-17 AS builder</text>
+<text x="72" y="258" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve"></text>
+<text x="72" y="280" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  WORKDIR /app</text>
+<text x="72" y="302" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  COPY pom.xml ./</text>
+<text x="72" y="324" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  COPY src ./src</text>
+<text x="72" y="346" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  RUN mvn -q -DskipTests package</text>
+<text x="72" y="368" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve"></text>
+<text x="72" y="390" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  FROM eclipse-temurin:17-jre-jammy</text>
+<text x="72" y="412" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve"></text>
+<text x="72" y="434" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  RUN useradd -r -m -d /app appuser</text>
+<text x="72" y="456" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve"></text>
+<text x="72" y="478" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  WORKDIR /app</text>
+<text x="72" y="500" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve"></text>
+<text x="72" y="522" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  COPY --from=builder /app/target/hello_java-0.1.0.jar /app/hello_java.jar</text>
+<text x="72" y="544" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve"></text>
+<text x="72" y="566" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  RUN mkdir -p /app/events \</text>
+<text x="72" y="588" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">    &amp;&amp; chown -R appuser:appuser /app</text>
+<text x="72" y="610" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve"></text>
+<text x="72" y="632" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  ENV APP_HOST=0.0.0.0</text>
+<text x="72" y="654" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  ENV PORT=3006</text>
+<text x="72" y="676" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve"></text>
+<text x="72" y="698" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  EXPOSE 3006</text>
+<text x="72" y="720" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve"></text>
+<text x="72" y="742" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  USER appuser</text>
+<text x="72" y="764" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve"></text>
+<text x="72" y="786" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  CMD ["java", "-jar", "/app/hello_java.jar"]</text>
+<rect x="48" y="850" width="736" height="126" rx="8" fill="#1f2428" stroke="#3d464d" stroke-width="1.2" />
+<rect x="48" y="850" width="736" height="56" rx="8" fill="#0f766e" />
+<rect x="48" y="898" width="736" height="8" fill="#0f766e" />
+<text x="68" y="884" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" fill="#f8fafc">Command</text>
+<text x="72" y="936" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">docker build -t hello-java .</text>
+<rect x="48" y="1000" width="736" height="192" rx="8" fill="#1f2428" stroke="#3d464d" stroke-width="1.2" />
+<rect x="48" y="1000" width="736" height="56" rx="8" fill="#ca8a04" />
+<rect x="48" y="1048" width="736" height="8" fill="#ca8a04" />
+<text x="68" y="1034" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" fill="#f8fafc">Context</text>
+<text x="72" y="1086" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  - pom.xml</text>
+<text x="72" y="1108" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  - src/main/java/com/example/hello_java/</text>
+<text x="72" y="1130" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  - src/main/resources/application.properties</text>
+<text x="72" y="1152" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  - Dockerfile</text>
+<rect x="816" y="150" width="736" height="236" rx="8" fill="#1f2428" stroke="#3d464d" stroke-width="1.2" />
+<rect x="816" y="150" width="736" height="56" rx="8" fill="#16a34a" />
+<rect x="816" y="198" width="736" height="8" fill="#16a34a" />
+<text x="836" y="184" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" fill="#f8fafc">Build Stage</text>
+<text x="840" y="236" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  4.1 maven:3.9.9-eclipse-temurin-17</text>
+<text x="840" y="258" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">    4.1.1 /app</text>
+<text x="840" y="280" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">      - pom.xml</text>
+<text x="840" y="302" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">      - src</text>
+<text x="840" y="324" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">    4.1.2 /app/target</text>
+<text x="840" y="346" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">      - hello_java-0.1.0.jar</text>
+<rect x="816" y="410" width="736" height="236" rx="8" fill="#1f2428" stroke="#3d464d" stroke-width="1.2" />
+<rect x="816" y="410" width="736" height="56" rx="8" fill="#ea580c" />
+<rect x="816" y="458" width="736" height="8" fill="#ea580c" />
+<text x="836" y="444" font-family="Inter, Arial, sans-serif" font-size="20" font-weight="800" fill="#f8fafc">Runtime Stage</text>
+<text x="840" y="496" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">  5.1 Docker image</text>
+<text x="840" y="518" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">      5.1.1 hello-java</text>
+<text x="840" y="540" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">        5.1.1.1 eclipse-temurin:17-jre-jammy</text>
+<text x="840" y="562" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">          5.1.1.1.1 /app</text>
+<text x="840" y="584" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">            - hello_java.jar</text>
+<text x="840" y="606" font-family="Menlo, Consolas, monospace" font-size="15" fill="#e5e7eb" xml:space="preserve">            - events</text>
+</svg>

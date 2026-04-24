@@ -1,0 +1,83 @@
+1. Real World
+    FROM node:22-bookworm-slim AS builder
+
+    WORKDIR /app
+    COPY package*.json ./
+    RUN npm install --omit=dev
+
+    FROM node:22-bookworm-slim
+
+    WORKDIR /app
+
+    COPY --from=builder /app/node_modules ./node_modules
+    COPY package.json ./
+    COPY server.js ./
+
+    RUN mkdir -p /app/events \
+        && chown -R node:node /app
+
+    ENV APP_HOST=0.0.0.0
+    ENV PORT=3003
+
+    EXPOSE 3003
+
+    USER node
+
+    CMD ["node", "server.js"]
+
+2. Command
+    docker build -t hello-javascript .
+
+3. Context
+    - server.js
+    - package.json
+    - Dockerfile
+
+4. Build stage
+    4.1 node:22-bookworm-slim
+        4.1.1 /app
+            - package.json
+            - node_modules
+5. Runtime stage
+    5.1 Docker image
+            5.1.1 hello-javascript
+                5.1.1.1 node:22-bookworm-slim
+                    5.1.1.1.1 /app
+                        - package.json
+                        - server.js
+                        - node_modules
+                        - events
+
+6. Real World line by line
+    6.1 FROM node:22-bookworm-slim AS builder
+        - ใช้ image Node.js เป็น build stage สำหรับติดตั้ง dependencies
+    6.2 WORKDIR /app
+        - กำหนดโฟลเดอร์ทำงานของ build stage เป็น /app
+    6.3 COPY package*.json ./
+        - คัดลอกไฟล์ package.json และไฟล์ lock ถ้ามีเข้ามาเพื่อใช้ติดตั้ง package
+    6.4 RUN npm install --omit=dev
+        - ติดตั้งเฉพาะ dependencies ที่ใช้รันจริง ไม่รวม devDependencies
+    6.5 FROM node:22-bookworm-slim
+        - เริ่ม runtime stage ใหม่จาก image Node.js ขนาดเล็ก
+    6.6 WORKDIR /app
+        - ตั้งโฟลเดอร์ทำงานของ runtime stage เป็น /app
+    6.7 COPY --from=builder /app/node_modules ./node_modules
+        - คัดลอก node_modules ที่ติดตั้งแล้วจาก build stage เข้ามา
+    6.8 COPY package.json ./
+        - คัดลอก package.json มาด้วยเพื่อเก็บข้อมูลโปรเจ็กต์ใน image
+    6.9 COPY server.js ./
+        - คัดลอก source หลักของ Express app เข้ามา
+    6.10 RUN mkdir -p /app/events \
+        - สร้างโฟลเดอร์ events สำหรับเก็บ event log
+    6.11 && chown -R node:node /app
+        - เปลี่ยน owner ของ /app ให้ user node เขียนไฟล์ได้
+    6.12 ENV APP_HOST=0.0.0.0
+        - ตั้งค่า host เริ่มต้นให้ service ฟังทุก interface ใน container
+    6.13 ENV PORT=3003
+        - กำหนดพอร์ตเริ่มต้นของ service เป็น 3003
+    6.14 EXPOSE 3003
+        - ระบุว่าภายใน container ใช้งานพอร์ต 3003
+    6.15 USER node
+        - สลับไปใช้ user node ตอนรันจริง
+    6.16 CMD ["node", "server.js"]
+        - กำหนดคำสั่งเริ่มต้นให้ container รัน server.js

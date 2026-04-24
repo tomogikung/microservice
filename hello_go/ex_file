@@ -1,0 +1,86 @@
+1. Real World
+    FROM golang:1.22-bookworm AS builder
+
+    WORKDIR /app
+    COPY go.mod ./
+    COPY main.go ./
+    RUN CGO_ENABLED=0 GOOS=linux go build -o hello_go .
+
+    FROM debian:bookworm-slim
+
+    RUN apt-get update \
+        && apt-get install -y --no-install-recommends ca-certificates \
+        && rm -rf /var/lib/apt/lists/* \
+        && useradd -r -m -d /app appuser
+
+    WORKDIR /app
+
+    COPY --from=builder /app/hello_go /usr/local/bin/hello_go
+
+    ENV APP_HOST=0.0.0.0
+    ENV PORT=3001
+
+    EXPOSE 3001
+
+    USER appuser
+
+    CMD ["hello_go"]
+
+2. Command
+    docker build -t hello-go .
+
+3. Context
+    - main.go
+    - go.mod
+    - Dockerfile
+
+4. Build stage
+    4.1 golang:1.22-bookworm
+        4.1.1 /app
+            - main.go
+            - go.mod
+            - hello_go
+5. Runtime stage
+    5.1 Docker image
+            5.1.1 hello-go
+                5.1.1.1 debian:bookworm-slim
+                    5.1.1.1.1 /usr/local/bin/hello_go
+                        - hello_go
+                    5.1.1.1.2 /app
+                        - events
+
+6. Real World line by line
+    6.1 FROM golang:1.22-bookworm AS builder
+        - ใช้ image Go เป็น build stage ชื่อ builder สำหรับคอมไพล์ binary
+    6.2 WORKDIR /app
+        - กำหนดโฟลเดอร์ทำงานใน stage นี้เป็น /app
+    6.3 COPY go.mod ./
+        - คัดลอกไฟล์ module definition เข้าไปก่อนเพื่อเตรียม build
+    6.4 COPY main.go ./
+        - คัดลอก source หลักของโปรเจ็กต์เข้า build stage
+    6.5 RUN CGO_ENABLED=0 GOOS=linux go build -o hello_go .
+        - คอมไพล์เป็น binary สำหรับ Linux และปิด CGO เพื่อให้พกพาง่ายขึ้น
+    6.6 FROM debian:bookworm-slim
+        - เริ่ม runtime stage ที่เล็กกว่าและไม่ต้องมี Go toolchain
+    6.7 RUN apt-get update \
+        - อัปเดตรายการ package ก่อนติดตั้งของที่ runtime ต้องใช้
+    6.8 && apt-get install -y --no-install-recommends ca-certificates \
+        - ติดตั้ง ca-certificates สำหรับการเชื่อมต่อ HTTPS
+    6.9 && rm -rf /var/lib/apt/lists/* \
+        - ล้าง apt cache เพื่อลดขนาด image
+    6.10 && useradd -r -m -d /app appuser
+        - สร้าง user appuser สำหรับรันโปรแกรมแบบ non-root
+    6.11 WORKDIR /app
+        - ตั้งโฟลเดอร์ทำงานของ runtime stage เป็น /app
+    6.12 COPY --from=builder /app/hello_go /usr/local/bin/hello_go
+        - คัดลอก binary hello_go จาก build stage เข้ามาใน runtime image
+    6.13 ENV APP_HOST=0.0.0.0
+        - ตั้งค่า host เริ่มต้นให้ service ฟังทุก interface ใน container
+    6.14 ENV PORT=3001
+        - กำหนดพอร์ตเริ่มต้นของ service เป็น 3001
+    6.15 EXPOSE 3001
+        - ระบุว่าภายใน container ใช้งานพอร์ต 3001
+    6.16 USER appuser
+        - สลับไปใช้ user appuser ตอนรันจริง
+    6.17 CMD ["hello_go"]
+        - กำหนดคำสั่งเริ่มต้นให้ container รัน binary hello_go

@@ -1,16 +1,16 @@
 use axum::{
+    Json, Router,
     extract::{OriginalUri, State},
     http::Method,
     routing::get,
-    Json, Router,
 };
 use chrono::{FixedOffset, Utc};
 use serde::Serialize;
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 use tokio::{
-    fs::{create_dir_all, OpenOptions},
+    fs::{OpenOptions, create_dir_all},
     io::AsyncWriteExt,
-    sync::mpsc::{unbounded_channel, UnboundedReceiver, UnboundedSender},
+    sync::mpsc::{UnboundedReceiver, UnboundedSender, unbounded_channel},
 };
 use uuid::Uuid;
 
@@ -139,7 +139,10 @@ async fn event_consumer(mut event_rx: UnboundedReceiver<AppEvent>, log_path: Pat
     while let Some(event) = event_rx.recv().await {
         match serde_json::to_string(&event) {
             Ok(json_line) => {
-                if let Err(error) = log_file.write_all(format!("{json_line}\n").as_bytes()).await {
+                if let Err(error) = log_file
+                    .write_all(format!("{json_line}\n").as_bytes())
+                    .await
+                {
                     eprintln!("failed to write event log: {error}");
                 }
             }
@@ -258,6 +261,9 @@ async fn health(
 async fn main() {
     let (event_tx, event_rx) = unbounded_channel();
     let state = AppState { event_tx };
+    let host = env::var("APP_HOST").unwrap_or_else(|_| "0.0.0.0".to_string());
+    let port = env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let bind_address = format!("{host}:{port}");
 
     tokio::spawn(event_consumer(event_rx, PathBuf::from(EVENT_LOG_PATH)));
 
@@ -267,9 +273,33 @@ async fn main() {
         .route("/health", get(health))
         .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
+    let listener = tokio::net::TcpListener::bind(&bind_address)
         .await
-        .unwrap();
+        .unwrap_or_else(|error| panic!("failed to bind {bind_address}: {error}"));
+
+    println!("hello_rust listening on http://{bind_address}");
 
     axum::serve(listener, app).await.unwrap();
+}
+
+pub fn add(a: i32, b: i32) -> i32 {
+    a + b
+}
+
+// This is a really bad adding function, its purpose is to fail in this
+// example.
+#[allow(dead_code)]
+fn bad_add(a: i32, b: i32) -> i32 {
+    a - b
+}
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_add() {
+        assert_eq!(add(1, 2), 3);
+    }
 }

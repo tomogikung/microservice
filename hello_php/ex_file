@@ -1,0 +1,73 @@
+1. Real World
+    FROM php:8.3-cli-bookworm
+
+    RUN useradd -r -m -d /app appuser
+
+    WORKDIR /app
+
+    COPY composer.json ./
+    COPY consumer.php ./
+    COPY public ./public
+
+    RUN mkdir -p /app/events/pending \
+        && chown -R appuser:appuser /app
+
+    ENV APP_HOST=0.0.0.0
+    ENV PORT=3004
+
+    EXPOSE 3004
+
+    USER appuser
+
+    CMD ["sh", "-c", "while true; do php consumer.php; sleep 1; done & exec php -S ${APP_HOST}:${PORT} -t public"]
+
+2. Command
+    docker build -t hello-php .
+
+3. Context
+    - public/index.php
+    - consumer.php
+    - composer.json
+    - Dockerfile
+
+4. Build stage
+    4.1 none
+        4.1.1 this project runs PHP source directly
+
+5. Runtime stage
+    5.1 Docker image
+            5.1.1 hello-php
+                5.1.1.1 php:8.3-cli-bookworm
+                    5.1.1.1.1 /app
+                        - public/index.php
+                        - consumer.php
+                        - composer.json
+                        - events
+
+6. Real World line by line
+    6.1 FROM php:8.3-cli-bookworm
+        - ใช้ image PHP CLI เป็น runtime image โดยตรง เพราะโปรเจ็กต์นี้รัน source ตรงได้
+    6.2 RUN useradd -r -m -d /app appuser
+        - สร้าง user appuser สำหรับรัน service แบบ non-root
+    6.3 WORKDIR /app
+        - ตั้งโฟลเดอร์ทำงานภายใน container เป็น /app
+    6.4 COPY composer.json ./
+        - คัดลอก composer.json เข้ามาเพื่อเก็บข้อมูล dependency ของโปรเจ็กต์
+    6.5 COPY consumer.php ./
+        - คัดลอกสคริปต์ consumer ที่ใช้ย้าย event จาก queue ไป log file
+    6.6 COPY public ./public
+        - คัดลอกโฟลเดอร์ public ที่มี entrypoint ของ HTTP app เข้ามา
+    6.7 RUN mkdir -p /app/events/pending \
+        - สร้างโฟลเดอร์ queue สำหรับ event ที่รอถูก consume
+    6.8 && chown -R appuser:appuser /app
+        - เปลี่ยน owner ของ /app ให้ appuser เขียนไฟล์ event ได้
+    6.9 ENV APP_HOST=0.0.0.0
+        - ตั้งค่า host เริ่มต้นให้ PHP built-in server ฟังทุก interface ใน container
+    6.10 ENV PORT=3004
+        - กำหนดพอร์ตเริ่มต้นของ service เป็น 3004
+    6.11 EXPOSE 3004
+        - ระบุว่าภายใน container ใช้งานพอร์ต 3004
+    6.12 USER appuser
+        - สลับไปใช้ appuser ตอนรันจริง
+    6.13 CMD ["sh", "-c", "while true; do php consumer.php; sleep 1; done & exec php -S ${APP_HOST}:${PORT} -t public"]
+        - รัน consumer เป็น background loop และเปิด PHP built-in server สำหรับรับ HTTP request

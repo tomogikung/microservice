@@ -1,0 +1,86 @@
+1. Real World
+    FROM maven:3.9.9-eclipse-temurin-17 AS builder
+
+    WORKDIR /app
+    COPY pom.xml ./
+    COPY src ./src
+    RUN mvn -q -DskipTests package
+
+    FROM eclipse-temurin:17-jre-jammy
+
+    RUN useradd -r -m -d /app appuser
+
+    WORKDIR /app
+
+    COPY --from=builder /app/target/hello_java-0.1.0.jar /app/hello_java.jar
+
+    RUN mkdir -p /app/events \
+        && chown -R appuser:appuser /app
+
+    ENV APP_HOST=0.0.0.0
+    ENV PORT=3006
+
+    EXPOSE 3006
+
+    USER appuser
+
+    CMD ["java", "-jar", "/app/hello_java.jar"]
+
+2. Command
+    docker build -t hello-java .
+
+3. Context
+    - pom.xml
+    - src/main/java/com/example/hello_java/
+    - src/main/resources/application.properties
+    - Dockerfile
+
+4. Build stage
+    4.1 maven:3.9.9-eclipse-temurin-17
+        4.1.1 /app
+            - pom.xml
+            - src
+        4.1.2 /app/target
+            - hello_java-0.1.0.jar
+
+5. Runtime stage
+    5.1 Docker image
+            5.1.1 hello-java
+                5.1.1.1 eclipse-temurin:17-jre-jammy
+                    5.1.1.1.1 /app
+                        - hello_java.jar
+                        - events
+
+6. Real World line by line
+    6.1 FROM maven:3.9.9-eclipse-temurin-17 AS builder
+        - ใช้ image Maven + JDK เป็น build stage สำหรับ package แอป Spring Boot
+    6.2 WORKDIR /app
+        - กำหนดโฟลเดอร์ทำงานของ build stage เป็น /app
+    6.3 COPY pom.xml ./
+        - คัดลอก pom.xml เข้ามาเพื่อใช้ resolve dependency และ build project
+    6.4 COPY src ./src
+        - คัดลอก source code และ resource ของ Java app เข้ามา
+    6.5 RUN mvn -q -DskipTests package
+        - สั่ง Maven package แอปเป็น jar โดยข้าม tests ระหว่าง build image
+    6.6 FROM eclipse-temurin:17-jre-jammy
+        - เริ่ม runtime stage จาก image JRE ที่เล็กกว่า image build
+    6.7 RUN useradd -r -m -d /app appuser
+        - สร้าง user appuser สำหรับรัน service แบบ non-root
+    6.8 WORKDIR /app
+        - ตั้งโฟลเดอร์ทำงานของ runtime stage เป็น /app
+    6.9 COPY --from=builder /app/target/hello_java-0.1.0.jar /app/hello_java.jar
+        - คัดลอก jar ที่ build เสร็จแล้วจาก build stage เข้ามาใน runtime image
+    6.10 RUN mkdir -p /app/events \
+        - สร้างโฟลเดอร์เก็บ event log ให้พร้อมใช้งาน
+    6.11 && chown -R appuser:appuser /app
+        - เปลี่ยน owner ของ /app ให้ appuser เขียนไฟล์ได้
+    6.12 ENV APP_HOST=0.0.0.0
+        - ตั้งค่า host เริ่มต้นให้ Spring Boot ฟังทุก interface ใน container
+    6.13 ENV PORT=3006
+        - กำหนดพอร์ตเริ่มต้นของ service เป็น 3006
+    6.14 EXPOSE 3006
+        - ระบุว่าภายใน container ใช้งานพอร์ต 3006
+    6.15 USER appuser
+        - สลับไปใช้ appuser ตอนรันจริง
+    6.16 CMD ["java", "-jar", "/app/hello_java.jar"]
+        - กำหนดคำสั่งเริ่มต้นให้ container รัน jar ของ Spring Boot

@@ -1,0 +1,97 @@
+1. Real World
+    FROM rust:1.94-bookworm AS builder
+
+    WORKDIR /app
+    COPY Cargo.toml Cargo.lock ./
+    COPY src ./src
+    RUN cargo build --locked --release
+
+    FROM debian:bookworm-slim
+
+    RUN apt-get update \
+        && apt-get install -y --no-install-recommends ca-certificates \
+        && rm -rf /var/lib/apt/lists/* \
+        && useradd -r -m -d /app appuser
+
+    WORKDIR /app
+
+    COPY --from=builder /app/target/release/hello_rust /usr/local/bin/hello_rust
+
+    RUN mkdir -p /app/events \
+        && chown -R appuser:appuser /app
+
+    ENV APP_HOST=0.0.0.0
+    ENV PORT=3000
+
+    EXPOSE 3000
+
+    USER appuser
+
+    CMD ["hello_rust"]
+
+2. Command
+    docker build -t hello-rust .
+
+3. Context
+    - src/main.rs
+    - Cargo.toml
+    - Cargo.lock
+    - Dockerfile
+
+4. Build stage
+    4.1 rust:1.94-bookworm
+        4.1.1 /app
+            - src/main.rs
+            - Cargo.toml
+            - Cargo.lock
+        4.1.2 /app/target/release
+            - hello_rust
+
+5. Runtime stage
+    5.1 Docker image
+            5.1.1 hello-rust
+                5.1.1.1 debian:bookworm-slim
+                    5.1.1.1.1 /usr/local/bin/hello_rust
+                        - hello_rust
+                    5.1.1.1.2 /app
+                        - events
+
+6. Real World line by line
+    6.1 FROM rust:1.94-bookworm AS builder
+        - ใช้ image Rust เป็น build stage ชื่อ builder สำหรับคอมไพล์โปรแกรม
+    6.2 WORKDIR /app
+        - กำหนดให้คำสั่งถัดไปทำงานในโฟลเดอร์ /app
+    6.3 COPY Cargo.toml Cargo.lock ./
+        - คัดลอกไฟล์ dependency lock และ manifest เข้า image เพื่อเตรียม build
+    6.4 COPY src ./src
+        - คัดลอก source code Rust เข้าไปใน build stage
+    6.5 RUN cargo build --locked --release
+        - คอมไพล์แบบ release และบังคับใช้ dependency ตาม Cargo.lock
+    6.6 FROM debian:bookworm-slim
+        - เริ่ม runtime stage ที่มีขนาดเล็กกว่าฝั่ง build
+    6.7 RUN apt-get update \
+        - อัปเดตรายการ package ของระบบก่อนติดตั้งสิ่งที่จำเป็น
+    6.8 && apt-get install -y --no-install-recommends ca-certificates \
+        - ติดตั้ง ca-certificates เพื่อให้โปรแกรมเรียก HTTPS ได้ถูกต้อง
+    6.9 && rm -rf /var/lib/apt/lists/* \
+        - ลบ apt cache เพื่อลดขนาด image
+    6.10 && useradd -r -m -d /app appuser
+        - สร้าง user แบบ non-root ชื่อ appuser และกำหนด home เป็น /app
+    6.11 WORKDIR /app
+        - ตั้งโฟลเดอร์ทำงานของ runtime stage เป็น /app
+    6.12 COPY --from=builder /app/target/release/hello_rust /usr/local/bin/hello_rust
+        - คัดลอก binary ที่ build เสร็จแล้วจาก build stage เข้ามาใน runtime image
+    6.13 RUN mkdir -p /app/events \
+        - สร้างโฟลเดอร์เก็บ event log ให้มีอยู่ก่อนเริ่มรันโปรแกรม
+    6.14 && chown -R appuser:appuser /app
+        - เปลี่ยน owner ของ /app ให้ appuser เขียนไฟล์ log ได้
+    6.15 ENV APP_HOST=0.0.0.0
+        - ตั้งค่า host เริ่มต้นให้ service ฟังทุก network interface ใน container
+    6.16 ENV PORT=3000
+        - ตั้งค่าพอร์ตเริ่มต้นของ service เป็น 3000
+    6.17 EXPOSE 3000
+        - ระบุว่าภายใน container ใช้งานพอร์ต 3000
+    6.18 USER appuser
+        - สลับไปใช้ appuser ตอนรันจริงเพื่อความปลอดภัย
+    6.19 CMD ["hello_rust"]
+        - กำหนดคำสั่งเริ่มต้นให้ container รัน binary hello_rust

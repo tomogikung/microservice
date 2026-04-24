@@ -5,7 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 
 const string ServiceName = "hello_csharp";
 const string EventLogFile = "events/request-events.jsonl";
-const int Port = 3005;
+const int DefaultPort = 3005;
+
+var host = Environment.GetEnvironmentVariable("APP_HOST") ?? "127.0.0.1";
+var port = int.TryParse(Environment.GetEnvironmentVariable("PORT"), out var configuredPort)
+    ? configuredPort
+    : DefaultPort;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -86,13 +91,13 @@ app.MapGet("/health", (HttpRequest request, [FromServices] Channel<AppEvent> eve
             service = ServiceName,
             healthy = true,
             event_consumer = "background service file logger",
-            port = Port
+            port
         },
         request = RequestInfo(request, traceId)
     });
 });
 
-app.Run($"http://127.0.0.1:{Port}");
+app.Run($"http://{host}:{port}");
 
 static RequestInfo RequestInfo(HttpRequest request, string traceId) => new(
     request.Method,

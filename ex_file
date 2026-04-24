@@ -1,0 +1,41 @@
+1. Real World
+    FROM rust:1-bookworm AS builder
+
+    WORKDIR /app
+    #เพื่อไม่ให้ cargo รันใหม่หมด และรันเฉพาะเมื่อมีการเปลี่ยน ในไฟล์ Cargo.toml, Cargo.lock, หรือ src เปลี่ยน
+    COPY Cargo.toml Cargo.lock* ./
+    COPY src ./src
+    RUN cargo build --release
+
+    FROM debian:bookworm-slim
+
+    WORKDIR /app
+
+    COPY --from=builder /app/target/release/muti_axum /usr/local/bin/muti_axum
+
+    EXPOSE 3009
+
+    ENTRYPOINT [ "/usr/local/bin/muti_axum" ]
+    CMD ["muti_axum"]
+
+2. Command
+    docker build -t muti-axum .
+
+3. Context
+    - main.rs
+    - cargo.lock
+    - cargo.toml
+
+4. Build stage
+    4.1 rust:1-bookworm
+        4.1.1 /app
+            - main.rs
+            - cargo.lock
+            - cargo.toml
+            - target
+5. Runtime stage
+    5.1 Docker image
+            5.1.1 muti-axum
+                5.1.1.1 debian:bookworm-slim
+                    5.1.1.1.1 /usr/local/bin/muti_axum
+                        - muti_axum.exe

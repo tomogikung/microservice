@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 
 const serviceName = 'hello_dart';
-const port = 3007;
+const defaultHost = '127.0.0.1';
+const defaultPort = 3007;
 const eventLogPath = 'events/request-events.jsonl';
 
 String newTraceId() => DateTime.now().toUtc().microsecondsSinceEpoch.toString();
@@ -80,8 +81,10 @@ Future<void> main() async {
   final eventController = StreamController<Map<String, dynamic>>();
   unawaited(eventConsumer(eventController.stream));
 
-  final server = await HttpServer.bind(InternetAddress.loopbackIPv4, port);
-  stdout.writeln('Server running at http://127.0.0.1:$port');
+  final host = Platform.environment['APP_HOST'] ?? defaultHost;
+  final port = int.tryParse(Platform.environment['PORT'] ?? '') ?? defaultPort;
+  final server = await HttpServer.bind(host, port);
+  stdout.writeln('Server running at http://$host:$port');
 
   await for (final request in server) {
     final traceId = newTraceId();
